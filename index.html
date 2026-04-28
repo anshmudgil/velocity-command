@@ -1,284 +1,1142 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Velocity Command</title>
+<title>Velocity Control</title>
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#0a0a0f;--surface:#111118;--surface2:#16161f;
-  --border:#1e1e2e;--border2:#2a2a3e;
-  --text:#e2e2f0;--muted:#6b6b8a;
-  --accent:#7c6af7;--accent2:#5b4fd4;
-  --green:#22c55e;--amber:#f59e0b;--red:#ef4444;--blue:#3b82f6;--cyan:#06b6d4;
-  --font:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono','Fira Code',monospace;
+/* ── Design tokens (matches velocityos-demo-architecture globals.css dark mode) ── */
+:root {
+  --background: 0 0% 3.9%;
+  --foreground: 0 0% 98%;
+  --card: 0 0% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --primary: 0 0% 98%;
+  --primary-foreground: 0 0% 9%;
+  --secondary: 0 0% 14.9%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 0 0% 14.9%;
+  --muted-foreground: 0 0% 63.9%;
+  --accent: 0 0% 14.9%;
+  --accent-foreground: 0 0% 98%;
+  --border: 0 0% 14.9%;
+  --destructive: 0 62.8% 30.6%;
+  --radius: 0.5rem;
+
+  /* Semantic helpers */
+  --bg:      hsl(var(--background));
+  --fg:      hsl(var(--foreground));
+  --card-bg: hsl(var(--card));
+  --sec:     hsl(var(--secondary));
+  --mut:     hsl(var(--muted));
+  --mutfg:   hsl(var(--muted-foreground));
+  --bdr:     hsl(var(--border));
+  --pri:     hsl(var(--primary));
+  --prifg:   hsl(var(--primary-foreground));
+
+  /* Stage colors — exact from constants.ts */
+  --c-capture:     #94a3b8;
+  --c-triage:      #f59e0b;
+  --c-design:      #8b5cf6;
+  --c-scoping:     #06b6d4;
+  --c-engineering: #3b82f6;
+  --c-qa:          #f97316;
+  --c-review:      #ec4899;
+  --c-deploy:      #14b8a6;
+  --c-live:        #22c55e;
+  --c-blocked:     #ef4444;
+  --c-done:        #22c55e;
+  --c-in_progress: #f59e0b;
+  --c-failed:      #ef4444;
+
+  --font: 'Inter', system-ui, -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
 }
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px;line-height:1.5;overflow:hidden}
-.app{display:grid;grid-template-rows:48px 1fr 30px;height:100vh;overflow:hidden}
 
-/* Header */
-header{display:flex;align-items:center;padding:0 16px;background:var(--surface);border-bottom:1px solid var(--border);gap:12px;flex-shrink:0}
-.logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;letter-spacing:-.02em}
-.logo-icon{width:26px;height:26px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff}
-.metric-strip{display:flex;gap:1px;background:var(--border);border-radius:6px;overflow:hidden;margin-left:auto}
-.metric{background:var(--surface2);padding:4px 10px;display:flex;flex-direction:column;align-items:center;min-width:64px}
-.metric-lbl{color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em}
-.metric-val{font-weight:700;font-size:13px;margin-top:1px}
-.metric-val.g{color:var(--green)}.metric-val.a{color:var(--amber)}.metric-val.r{color:var(--red)}
-.hdr-meta{display:flex;align-items:center;gap:12px;margin-left:12px}
-.hdr-stat{font-size:11px;color:var(--muted)}
-.hdr-stat .v{color:var(--text);font-weight:500}
-.dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;display:inline-block;margin-right:4px}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.btn-sync{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--muted);padding:4px 10px;font-size:11px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px}
-.btn-sync:hover{color:var(--text);border-color:var(--accent)}
-.btn-sync.spin svg{animation:rot .6s linear infinite}
-@keyframes rot{to{transform:rotate(360deg)}}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* Main 3-col */
-main{display:grid;grid-template-columns:170px 1fr 290px;overflow:hidden}
-.col{display:flex;flex-direction:column;border-right:1px solid var(--border);overflow:hidden}
-.col:last-child{border-right:none}
-.col-hdr{padding:10px 12px 8px;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:space-between}
-.col-body{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
-.col-body::-webkit-scrollbar{width:4px}
-.col-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* Agents */
-.agent-row{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
-.agent-row:hover{background:var(--surface2)}
-.agent-row.on{background:var(--surface2);border-left:2px solid var(--accent);padding-left:10px}
-.agent-ic{font-size:15px;width:26px;height:26px;background:var(--surface2);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.agent-info{flex:1;min-width:0}
-.agent-name{font-weight:500;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.agent-sub{font-size:10px;color:var(--muted);margin-top:1px}
-.ast{font-size:9px;font-weight:600;padding:2px 5px;border-radius:4px;letter-spacing:.04em;text-transform:uppercase;flex-shrink:0}
-.ast-active{background:rgba(34,197,94,.15);color:var(--green)}
-.ast-idle{background:rgba(107,107,138,.1);color:var(--muted)}
-.ast-blocked{background:rgba(239,68,68,.15);color:var(--red)}
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
 
-/* Log filters */
-.log-filters{display:flex;gap:5px;padding:7px 12px;border-bottom:1px solid var(--border);flex-wrap:wrap;flex-shrink:0}
-.fb{padding:2px 7px;border-radius:4px;font-size:10px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--muted);transition:all .15s}
-.fb:hover,.fb.on{background:var(--surface2);color:var(--text);border-color:var(--accent)}
+/* ── App shell ── */
+.shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
 
-/* Log entries */
-.log-date{padding:5px 12px;font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:2}
-.log-row{display:flex;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border);align-items:flex-start;transition:background .1s}
-.log-row:hover{background:var(--surface2)}
-.log-time{font-size:10px;color:var(--muted);font-family:var(--mono);flex-shrink:0;padding-top:1px;width:38px}
-.log-ic{font-size:12px;flex-shrink:0;width:16px;text-align:center;padding-top:1px}
-.log-bd{flex:1;min-width:0}
-.log-tag{display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:1px 5px;border-radius:4px;margin-bottom:2px;text-transform:uppercase;letter-spacing:.04em}
-.tag-CEO{background:rgba(124,106,247,.15);color:var(--accent)}
-.tag-ENGINEERING{background:rgba(6,182,212,.12);color:var(--cyan)}
-.tag-MARKETING{background:rgba(245,158,11,.12);color:var(--amber)}
-.tag-OUTREACH{background:rgba(239,68,68,.12);color:var(--red)}
-.tag-DESIGN{background:rgba(34,197,94,.12);color:var(--green)}
-.tag-QA{background:rgba(59,130,246,.12);color:var(--blue)}
-.tag-DATA{background:rgba(167,139,250,.12);color:#a78bfa}
-.tag-OPS{background:rgba(107,107,138,.15);color:var(--muted)}
-.spill{display:inline-flex;font-size:9px;font-weight:600;padding:1px 5px;border-radius:3px;margin-left:4px;text-transform:uppercase;letter-spacing:.03em}
-.spill-DONE{background:rgba(34,197,94,.15);color:var(--green)}
-.spill-IN_PROGRESS{background:rgba(245,158,11,.15);color:var(--amber);animation:pulse 2s infinite}
-.spill-BLOCKED{background:rgba(239,68,68,.15);color:var(--red)}
-.spill-FAILED{background:rgba(239,68,68,.2);color:var(--red)}
-.log-text{font-size:12px;color:var(--text);line-height:1.4}
-.log-out{margin-top:2px;font-size:10px;color:var(--muted);font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* ── Sidebar — exact sidebar.tsx layout ── */
+.sidebar {
+  width: 224px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--bdr);
+  background: var(--card-bg);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow: hidden;
+}
+
+.sidebar-header {
+  padding: 20px 16px;
+  border-bottom: 1px solid var(--bdr);
+  flex-shrink: 0;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-icon {
+  width: 28px; height: 28px;
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--pri);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.brand-icon svg { color: var(--prifg); }
+
+.brand-text p:first-child {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.brand-text p:last-child {
+  font-size: 12px;
+  color: var(--mutfg);
+  margin-top: 2px;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 12px 8px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.sidebar-nav::-webkit-scrollbar { display: none; }
+
+.nav-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+
+.nav-item a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: calc(var(--radius) - 2px);
+  font-size: 14px;
+  text-decoration: none;
+  transition: background 0.12s, color 0.12s;
+  color: var(--mutfg);
+  cursor: pointer;
+}
+
+.nav-item a:hover {
+  color: var(--fg);
+  background: var(--acc, var(--mut));
+}
+
+.nav-item a.active {
+  background: var(--pri);
+  color: var(--prifg);
+  font-weight: 500;
+}
+
+.nav-item a .nav-icon {
+  width: 16px; height: 16px;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+}
+
+.nav-item a .nav-label { flex: 1; }
+
+.nav-item a .nav-chevron {
+  opacity: 0.5;
+  font-size: 11px;
+}
+
+.sidebar-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--bdr);
+  flex-shrink: 0;
+}
+
+.sidebar-footer p {
+  font-size: 12px;
+  color: var(--mutfg);
+}
+
+.sidebar-footer p:last-child { opacity: 0.6; }
+
+/* ── Main content ── */
+.main {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ── Top bar ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 48px;
+  border-bottom: 1px solid var(--bdr);
+  background: var(--card-bg);
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+
+.topbar-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.live-dot {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--mutfg);
+}
+
+.live-dot::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+
+.btn-sync {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 12px;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid var(--bdr);
+  background: transparent;
+  color: var(--mutfg);
+  font-size: 12px;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: color .12s, border-color .12s;
+}
+
+.btn-sync:hover { color: var(--fg); border-color: var(--mutfg); }
+.btn-sync.spin svg { animation: rot .6s linear infinite; }
+@keyframes rot { to { transform: rotate(360deg); } }
+
+.topbar-date { font-size: 12px; color: var(--mutfg); }
+
+/* ── Page views ── */
+.page { display: none; flex-direction: column; flex: 1; }
+.page.active { display: flex; }
+
+/* ── Dashboard view ── */
+.dashboard-content {
+  padding: 24px;
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.page-header { margin-bottom: 24px; }
+.page-header h1 { font-size: 24px; font-weight: 700; }
+.page-header p { color: var(--mutfg); margin-top: 4px; font-size: 14px; }
+
+/* ── Stat cards — exact StatCard component ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
+
+.stat-card {
+  border-radius: var(--radius);
+  border: 1px solid var(--bdr);
+  background: var(--card-bg);
+  padding: 16px;
+  border-left-width: 3px;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card-label {
+  font-size: 12px;
+  color: var(--mutfg);
+  margin-bottom: 6px;
+}
+
+.stat-card-value {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.stat-card-desc {
+  font-size: 11px;
+  color: var(--mutfg);
+  margin-top: 4px;
+}
+
+.stat-card-icon {
+  position: absolute;
+  top: 12px; right: 12px;
+  color: var(--mutfg);
+  opacity: 0.4;
+  font-size: 18px;
+}
+
+/* ── Two-col grid ── */
+.two-col { display: grid; grid-template-columns: 1fr 320px; gap: 24px; margin-bottom: 24px; }
+@media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
+
+/* ── Card ── */
+.card {
+  border-radius: var(--radius);
+  border: 1px solid var(--bdr);
+  background: var(--card-bg);
+}
+
+.card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--bdr);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-title { font-size: 14px; font-weight: 600; }
+
+.card-link {
+  font-size: 12px;
+  color: var(--mutfg);
+  text-decoration: none;
+  display: flex; align-items: center; gap: 4px;
+  cursor: pointer;
+  transition: color .12s;
+}
+.card-link:hover { color: var(--fg); }
+
+.card-body { padding: 20px; }
+
+/* ── Pipeline bars ── */
+.pipeline-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.pipeline-label {
+  width: 90px;
+  font-size: 12px;
+  color: var(--mutfg);
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pipeline-bar-track {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--sec);
+  overflow: hidden;
+}
+
+.pipeline-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width .4s ease;
+}
+
+.pipeline-count {
+  width: 20px;
+  font-size: 12px;
+  text-align: right;
+  color: var(--mutfg);
+  flex-shrink: 0;
+}
+
+/* ── Quick actions ── */
+.quick-action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid var(--bdr);
+  cursor: pointer;
+  transition: background .12s;
+  text-decoration: none;
+  color: var(--fg);
+  margin-bottom: 8px;
+}
+
+.quick-action:hover { background: var(--acc, var(--mut)); }
+
+.qa-icon {
+  width: 32px; height: 32px;
+  border-radius: calc(var(--radius) - 2px);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.qa-text p:first-child { font-size: 14px; font-weight: 500; }
+.qa-text p:last-child { font-size: 12px; color: var(--mutfg); }
+
+.qa-arrow {
+  margin-left: auto;
+  color: var(--mutfg);
+  opacity: 0;
+  transition: opacity .12s;
+  font-size: 13px;
+}
+
+.quick-action:hover .qa-arrow { opacity: 1; }
+
+/* ── Recent items table ── */
+.recent-table { width: 100%; }
+
+.recent-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--bdr);
+  transition: background .1s;
+}
+
+.recent-row:last-child { border-bottom: none; }
+.recent-row:hover { background: var(--mut); }
+
+.recent-title { font-size: 14px; font-weight: 500; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.recent-date { font-size: 12px; color: var(--mutfg); margin-top: 2px; }
+.recent-badges { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+/* ── Badges — exact badges.tsx ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.badge-stage { }
+.badge-priority { }
+.badge-type { }
+.badge-tag { background: var(--sec); color: var(--fg); }
+
+/* ── Agent log view ── */
+.log-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.log-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--bdr);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.filter-chip {
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--bdr);
+  background: transparent;
+  color: var(--mutfg);
+  cursor: pointer;
+  transition: all .12s;
+  font-family: var(--font);
+}
+
+.filter-chip:hover, .filter-chip.active {
+  background: var(--pri);
+  color: var(--prifg);
+  border-color: var(--pri);
+}
+
+.log-body {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bdr) transparent;
+}
+
+.log-date-sep {
+  padding: 6px 24px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--mutfg);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  background: var(--mut);
+  border-bottom: 1px solid var(--bdr);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.log-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--bdr);
+  transition: background .1s;
+}
+
+.log-entry:hover { background: var(--mut); }
+
+.log-time {
+  font-size: 11px;
+  color: var(--mutfg);
+  font-family: var(--mono);
+  flex-shrink: 0;
+  padding-top: 2px;
+  width: 40px;
+}
+
+.log-status-icon { flex-shrink: 0; font-size: 14px; width: 20px; text-align: center; }
+
+.log-meta { flex: 1; min-width: 0; }
+
+.log-header-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 3px;
+  flex-wrap: wrap;
+}
+
+.agent-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.pill-DONE        { background: rgba(34,197,94,.15);  color: #22c55e; }
+.pill-IN_PROGRESS { background: rgba(245,158,11,.15); color: #f59e0b; }
+.pill-BLOCKED     { background: rgba(239,68,68,.15);  color: #ef4444; }
+.pill-FAILED      { background: rgba(239,68,68,.2);   color: #ef4444; }
+
+.log-action { font-size: 13px; color: var(--fg); line-height: 1.4; }
+.log-output {
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--mutfg);
+  font-family: var(--mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 /* Log add bar */
-.log-add{padding:7px 12px;border-top:1px solid var(--border);display:flex;gap:5px;flex-shrink:0}
-.log-add select,.log-add input{background:var(--surface2);border:1px solid var(--border2);border-radius:5px;color:var(--text);font-size:11px;padding:4px 7px;outline:none;font-family:var(--font)}
-.log-add select:focus,.log-add input:focus{border-color:var(--accent)}
-.log-add input{flex:1}
-.log-add button{background:var(--accent);border:none;border-radius:5px;color:#fff;font-size:11px;font-weight:600;padding:4px 10px;cursor:pointer;font-family:var(--font)}
-.log-add button:hover{background:var(--accent2)}
+.log-add {
+  padding: 10px 24px;
+  border-top: 1px solid var(--bdr);
+  background: var(--card-bg);
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
 
-/* Right panel tabs */
-.tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
-.tab{padding:7px 12px;font-size:11px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;margin-bottom:-1px}
-.tab:hover{color:var(--text)}
-.tab.on{color:var(--text);border-bottom-color:var(--accent)}
+.log-add select, .log-add input {
+  background: var(--mut);
+  border: 1px solid var(--bdr);
+  border-radius: calc(var(--radius) - 2px);
+  color: var(--fg);
+  font-size: 13px;
+  padding: 6px 10px;
+  outline: none;
+  font-family: var(--font);
+  transition: border-color .12s;
+}
 
-/* Priority items */
-.tier-hdr{padding:8px 12px 4px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:6px}
-.tier-badge{font-size:9px;padding:1px 5px;border-radius:4px;font-weight:700}
-.tb-T1{background:rgba(239,68,68,.2);color:#ef4444}
-.tb-T2{background:rgba(245,158,11,.2);color:#f59e0b}
-.tb-T3{background:rgba(59,130,246,.2);color:#3b82f6}
-.tb-T4{background:rgba(107,107,138,.2);color:#6b6b8a}
-.pitem{display:flex;gap:8px;padding:7px 12px;border-bottom:1px solid var(--border);align-items:flex-start;transition:background .1s}
-.pitem:hover{background:var(--surface2)}
-.pnum{font-size:10px;font-weight:700;color:var(--muted);width:14px;flex-shrink:0;padding-top:1px;font-family:var(--mono)}
-.pbody{flex:1;min-width:0}
-.ptask{font-size:12px;font-weight:500;line-height:1.35}
-.pagent{display:inline-flex;font-size:9px;font-weight:600;color:var(--accent);background:rgba(124,106,247,.1);padding:1px 5px;border-radius:3px;margin-top:3px}
-.pstate{font-size:9px;font-weight:600;padding:2px 5px;border-radius:4px;flex-shrink:0;text-transform:uppercase;letter-spacing:.03em}
-.ps-todo{background:var(--surface2);color:var(--muted)}
-.ps-active{background:rgba(245,158,11,.15);color:var(--amber)}
-.ps-done{background:rgba(34,197,94,.12);color:var(--green)}
-.ps-blocked{background:rgba(239,68,68,.12);color:var(--red)}
+.log-add select:focus, .log-add input:focus { border-color: var(--mutfg); }
+.log-add input { flex: 1; }
 
-/* Decision rows */
-.dec-row{display:flex;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border)}
-.dec-date{font-size:10px;color:var(--muted);font-family:var(--mono);flex-shrink:0;width:80px}
-.dec-text{font-size:12px;color:var(--text);line-height:1.4}
+.btn-primary {
+  background: var(--pri);
+  color: var(--prifg);
+  border: none;
+  border-radius: calc(var(--radius) - 2px);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: opacity .12s;
+}
 
-/* Memory raw view */
-.mem-raw{padding:12px;font-size:11px;color:var(--muted);font-family:var(--mono);white-space:pre-wrap;line-height:1.6}
+.btn-primary:hover { opacity: 0.85; }
 
-/* Statusbar */
-.statusbar{display:flex;align-items:center;gap:16px;padding:0 14px;background:var(--surface);border-top:1px solid var(--border);font-size:10px;color:var(--muted)}
-.statusbar .v{color:var(--text);font-weight:500}
-.statusbar .sep{color:var(--border2)}
-.sb-right{margin-left:auto}
-.empty{padding:20px 12px;text-align:center;color:var(--muted);font-size:11px}
+/* ── Priority view ── */
+.priority-content {
+  padding: 24px;
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.tier-section { margin-bottom: 8px; }
+
+.tier-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--mutfg);
+}
+
+.tier-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+
+.tb-T1 { background: rgba(239,68,68,.2);   color: #ef4444; }
+.tb-T2 { background: rgba(245,158,11,.2);  color: #f59e0b; }
+.tb-T3 { background: rgba(59,130,246,.2);  color: #3b82f6; }
+.tb-T4 { background: rgba(148,163,184,.2); color: #94a3b8; }
+.tb-PERSONAL { background: rgba(139,92,246,.15); color: #8b5cf6; }
+
+.priority-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--bdr);
+  background: var(--card-bg);
+  margin-bottom: 6px;
+  transition: border-color .12s;
+}
+
+.priority-item:hover { border-color: var(--mutfg); }
+
+.p-num {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mutfg);
+  width: 18px;
+  flex-shrink: 0;
+  padding-top: 2px;
+  font-family: var(--mono);
+}
+
+.p-body { flex: 1; min-width: 0; }
+.p-task { font-size: 13px; font-weight: 500; line-height: 1.4; }
+.p-meta { font-size: 11px; color: var(--mutfg); margin-top: 3px; }
+.p-agent-tag {
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 600;
+  color: hsl(220 70% 65%);
+  background: rgba(59,130,246,.12);
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-top: 4px;
+}
+
+.p-state {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 7px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.ps-todo    { background: var(--sec); color: var(--mutfg); }
+.ps-active  { background: rgba(245,158,11,.15); color: #f59e0b; }
+.ps-done    { background: rgba(34,197,94,.12); color: #22c55e; }
+.ps-blocked { background: rgba(239,68,68,.12); color: #ef4444; }
+
+/* ── Decisions view ── */
+.decisions-content { padding: 24px; max-width: 700px; margin: 0 auto; }
+
+.decision-item {
+  display: flex;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--bdr);
+}
+
+.dec-date {
+  font-size: 12px;
+  color: var(--mutfg);
+  font-family: var(--mono);
+  flex-shrink: 0;
+  width: 90px;
+  padding-top: 1px;
+}
+
+.dec-text { font-size: 13px; color: var(--fg); line-height: 1.5; }
+
+/* ── Memory view ── */
+.memory-content { padding: 24px; max-width: 860px; margin: 0 auto; }
+.memory-raw {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--mutfg);
+  white-space: pre-wrap;
+  line-height: 1.7;
+  background: var(--mut);
+  padding: 20px;
+  border-radius: var(--radius);
+  border: 1px solid var(--bdr);
+  overflow-x: auto;
+}
+
+/* ── Metrics strip in topbar ── */
+.metric-strip {
+  display: flex;
+  gap: 1px;
+  border-radius: calc(var(--radius) - 2px);
+  overflow: hidden;
+  border: 1px solid var(--bdr);
+}
+
+.metric-chip {
+  background: var(--mut);
+  padding: 4px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 64px;
+}
+
+.metric-lbl { font-size: 9px; text-transform: uppercase; letter-spacing: .05em; color: var(--mutfg); }
+.metric-val { font-size: 14px; font-weight: 700; }
+.metric-val.green { color: #22c55e; }
+.metric-val.amber { color: #f59e0b; }
+.metric-val.red   { color: #ef4444; }
+.metric-val.blue  { color: #3b82f6; }
+
+/* ── Status bar ── */
+.statusbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 24px;
+  height: 30px;
+  background: var(--card-bg);
+  border-top: 1px solid var(--bdr);
+  font-size: 11px;
+  color: var(--mutfg);
+  flex-shrink: 0;
+}
+
+.statusbar span .v { color: var(--fg); font-weight: 500; }
+.statusbar .sep { color: var(--bdr); }
+.sb-right { margin-left: auto; }
+
+/* ── Empty states ── */
+.empty-state {
+  padding: 48px 24px;
+  text-align: center;
+  border: 1px dashed var(--bdr);
+  border-radius: var(--radius);
+  color: var(--mutfg);
+}
+
+.empty-state .empty-icon { font-size: 32px; margin-bottom: 12px; }
+.empty-state h3 { font-size: 16px; font-weight: 600; color: var(--fg); margin-bottom: 6px; }
+.empty-state p { font-size: 13px; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bdr); border-radius: 2px; }
 </style>
 </head>
 <body>
-<div class="app">
+<div class="shell">
 
-<header>
-  <div class="logo">
-    <div class="logo-icon">V</div>
-    Velocity Command
-  </div>
-  <div class="metric-strip">
-    <div class="metric"><span class="metric-lbl">MRR</span><span class="metric-val a" id="m-mrr">$0</span></div>
-    <div class="metric"><span class="metric-lbl">Installs</span><span class="metric-val" id="m-installs">0</span></div>
-    <div class="metric"><span class="metric-lbl">Pipeline</span><span class="metric-val" id="m-pipeline">0</span></div>
-    <div class="metric"><span class="metric-lbl">Done Today</span><span class="metric-val g" id="m-done">0</span></div>
-    <div class="metric"><span class="metric-lbl">Active</span><span class="metric-val a" id="m-active">0</span></div>
-  </div>
-  <div class="hdr-meta">
-    <span class="hdr-stat"><span class="dot"></span>Live</span>
-    <span class="hdr-stat"><span class="v" id="hdr-date">—</span></span>
-    <button class="btn-sync" id="syncBtn" onclick="syncAll()">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <path d="M23 4v6h-6M1 20v-6h6"/>
-        <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
-      </svg>Sync
-    </button>
-  </div>
-</header>
-
-<main>
-  <!-- AGENTS -->
-  <div class="col">
-    <div class="col-hdr">Agents</div>
-    <div class="col-body" id="agents-col"></div>
-  </div>
-
-  <!-- LOG -->
-  <div class="col" style="flex:1">
-    <div class="col-hdr">
-      Activity Log
-      <span id="log-count" style="font-size:10px;color:var(--muted)">—</span>
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <div class="brand-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:#0a0a0f">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <p>Velocity</p>
+          <p>Control</p>
+        </div>
+      </div>
     </div>
-    <div class="log-filters" id="log-filters"></div>
-    <div class="col-body" id="log-feed"></div>
-    <div class="log-add">
-      <select id="add-agent">
-        <option>CEO</option><option>ENGINEERING</option><option>MARKETING</option>
-        <option>OUTREACH</option><option>DESIGN</option><option>QA</option>
-        <option>DATA</option><option>OPS</option>
-      </select>
-      <select id="add-status">
-        <option>DONE</option><option>IN_PROGRESS</option>
-        <option>BLOCKED</option><option>FAILED</option>
-      </select>
-      <input id="add-text" placeholder="Log what just happened..." />
-      <button onclick="addLog()">Log</button>
+
+    <nav class="sidebar-nav">
+      <ul class="nav-list">
+        <li class="nav-item"><a class="active" onclick="showPage('dashboard')"><span class="nav-icon">⊞</span><span class="nav-label">Dashboard</span><span class="nav-chevron">›</span></a></li>
+        <li class="nav-item"><a onclick="showPage('log')"><span class="nav-icon">⚡</span><span class="nav-label">Activity Log</span></a></li>
+        <li class="nav-item"><a onclick="showPage('priority')"><span class="nav-icon">☰</span><span class="nav-label">Priority Stack</span></a></li>
+        <li class="nav-item"><a onclick="showPage('decisions')"><span class="nav-icon">⚖</span><span class="nav-label">Decisions</span></a></li>
+        <li class="nav-item"><a onclick="showPage('memory')"><span class="nav-icon">◎</span><span class="nav-label">Memory</span></a></li>
+      </ul>
+    </nav>
+
+    <div class="sidebar-footer">
+      <p>Velocity Command v1.0</p>
+      <p>Powered by Hermes</p>
     </div>
-  </div>
+  </aside>
 
-  <!-- RIGHT -->
-  <div class="col">
-    <div class="tabs">
-      <div class="tab on" onclick="tab(this,'priority')">Priority</div>
-      <div class="tab" onclick="tab(this,'decisions')">Decisions</div>
-      <div class="tab" onclick="tab(this,'memory')">Memory</div>
+  <!-- ── Main ── -->
+  <div class="main">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <span class="topbar-title" id="topbar-title">Dashboard</span>
+        <span class="live-dot" id="topbar-sub">Live</span>
+      </div>
+      <div class="topbar-right">
+        <div class="metric-strip">
+          <div class="metric-chip"><span class="metric-lbl">MRR</span><span class="metric-val amber" id="m-mrr">$0</span></div>
+          <div class="metric-chip"><span class="metric-lbl">Installs</span><span class="metric-val" id="m-installs">0</span></div>
+          <div class="metric-chip"><span class="metric-lbl">Done Today</span><span class="metric-val green" id="m-done">0</span></div>
+          <div class="metric-chip"><span class="metric-lbl">Active</span><span class="metric-val amber" id="m-active">0</span></div>
+        </div>
+        <span class="topbar-date" id="topbar-date"></span>
+        <button class="btn-sync" id="syncBtn" onclick="syncAll()">
+          <svg id="sync-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 4v6h-6M1 20v-6h6"/>
+            <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+          </svg>
+          Sync
+        </button>
+      </div>
     </div>
-    <div class="col-body" id="right-body"></div>
-  </div>
-</main>
 
-<div class="statusbar">
-  <span>Phase: <span class="v" id="sb-phase">—</span></span>
-  <span class="sep">|</span>
-  <span>Build: <span class="v" id="sb-build">—</span></span>
-  <span class="sep">|</span>
-  <span>Runway: <span class="v" id="sb-runway">—</span></span>
-  <span class="sep">|</span>
-  <span>Skills: <span class="v" id="sb-skills">—</span></span>
-  <span class="sb-right" id="sb-sync">Last sync: —</span>
-</div>
+    <!-- ── Dashboard Page ── -->
+    <div class="page active" id="page-dashboard">
+      <div class="dashboard-content">
+        <div class="page-header">
+          <h1>Velocity Control</h1>
+          <p>Internal execution OS — idea to production.</p>
+        </div>
 
-</div>
+        <!-- Stat Cards -->
+        <div class="stats-grid">
+          <div class="stat-card" style="border-left-color:#3b82f6">
+            <div class="stat-card-label">Done Today</div>
+            <div class="stat-card-value" id="d-done">0</div>
+            <div class="stat-card-icon">✓</div>
+          </div>
+          <div class="stat-card" style="border-left-color:#f59e0b">
+            <div class="stat-card-label">In Progress</div>
+            <div class="stat-card-value" id="d-active">0</div>
+            <div class="stat-card-desc">running now</div>
+            <div class="stat-card-icon">◉</div>
+          </div>
+          <div class="stat-card" style="border-left-color:#ef4444">
+            <div class="stat-card-label">Blocked</div>
+            <div class="stat-card-value" id="d-blocked">0</div>
+            <div class="stat-card-desc">needs attention</div>
+            <div class="stat-card-icon">⊘</div>
+          </div>
+          <div class="stat-card" style="border-left-color:#22c55e">
+            <div class="stat-card-label">MRR</div>
+            <div class="stat-card-value" id="d-mrr">$0</div>
+            <div class="stat-card-icon">$</div>
+          </div>
+          <div class="stat-card" style="border-left-color:#8b5cf6">
+            <div class="stat-card-label">T1 Tasks</div>
+            <div class="stat-card-value" id="d-t1">0</div>
+            <div class="stat-card-desc">do now</div>
+            <div class="stat-card-icon">!</div>
+          </div>
+          <div class="stat-card" style="border-left-color:#94a3b8">
+            <div class="stat-card-label">Total Logged</div>
+            <div class="stat-card-value" id="d-total">0</div>
+            <div class="stat-card-icon">≡</div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <!-- Pipeline breakdown -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Agent Activity</span>
+              <a class="card-link" onclick="showPage('log')">View Log ›</a>
+            </div>
+            <div class="card-body" id="pipeline-bars">
+              <p style="font-size:12px;color:var(--mutfg)">Loading...</p>
+            </div>
+          </div>
+
+          <!-- Quick actions -->
+          <div class="card">
+            <div class="card-header"><span class="card-title">Quick Actions</span></div>
+            <div class="card-body" style="padding:12px">
+              <div class="quick-action" onclick="showPage('log');document.getElementById('add-text').focus()">
+                <div class="qa-icon" style="background:rgba(245,158,11,.15)">⚡</div>
+                <div class="qa-text"><p>Log Task</p><p>Record what just happened</p></div>
+                <span class="qa-arrow">›</span>
+              </div>
+              <div class="quick-action" onclick="showPage('priority')">
+                <div class="qa-icon" style="background:rgba(59,130,246,.15)">☰</div>
+                <div class="qa-text"><p>Priority Stack</p><p>See what's next to ship</p></div>
+                <span class="qa-arrow">›</span>
+              </div>
+              <div class="quick-action" onclick="showPage('decisions')">
+                <div class="qa-icon" style="background:rgba(139,92,246,.15)">⚖</div>
+                <div class="qa-text"><p>Decisions</p><p>Review logged decisions</p></div>
+                <span class="qa-arrow">›</span>
+              </div>
+              <div class="quick-action" onclick="showPage('memory')">
+                <div class="qa-icon" style="background:rgba(34,197,94,.15)">◎</div>
+                <div class="qa-text"><p>Memory</p><p>Full MEMORY.md context</p></div>
+                <span class="qa-arrow">›</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent activity -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Recent Activity</span>
+            <a class="card-link" onclick="showPage('log')">View all ›</a>
+          </div>
+          <div id="recent-list">
+            <div style="padding:24px;text-align:center;font-size:12px;color:var(--mutfg)">Loading...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Activity Log Page ── -->
+    <div class="page" id="page-log" style="flex-direction:column">
+      <div class="log-content">
+        <div class="log-toolbar" id="log-filters"></div>
+        <div class="log-body" id="log-feed"></div>
+        <div class="log-add">
+          <select id="add-agent">
+            <option>CEO</option><option>ENGINEERING</option><option>MARKETING</option>
+            <option>OUTREACH</option><option>DESIGN</option><option>QA</option>
+            <option>DATA</option><option>OPS</option>
+          </select>
+          <select id="add-status">
+            <option>DONE</option><option>IN_PROGRESS</option>
+            <option>BLOCKED</option><option>FAILED</option>
+          </select>
+          <input id="add-text" placeholder="What just happened?" />
+          <button class="btn-primary" onclick="addLog()">Log It</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Priority Stack Page ── -->
+    <div class="page" id="page-priority">
+      <div class="priority-content">
+        <div class="page-header">
+          <h1>Priority Stack</h1>
+          <p>Value Equation ranked tasks. T1 ships first.</p>
+        </div>
+        <div id="priority-list">
+          <div style="font-size:12px;color:var(--mutfg)">Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Decisions Page ── -->
+    <div class="page" id="page-decisions">
+      <div class="decisions-content">
+        <div class="page-header">
+          <h1>Decisions</h1>
+          <p>Logged product and business decisions.</p>
+        </div>
+        <div id="decisions-list">
+          <div style="font-size:12px;color:var(--mutfg)">Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Memory Page ── -->
+    <div class="page" id="page-memory">
+      <div class="memory-content">
+        <div class="page-header">
+          <h1>Memory</h1>
+          <p>MEMORY.md — long-term context. Updated nightly by cron.</p>
+        </div>
+        <div id="memory-body">
+          <div style="font-size:12px;color:var(--mutfg)">Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statusbar -->
+    <div class="statusbar">
+      <span>Phase: <span class="v" id="sb-phase">—</span></span>
+      <span class="sep">|</span>
+      <span>Build: <span class="v" id="sb-build">—</span></span>
+      <span class="sep">|</span>
+      <span>Runway: <span class="v" id="sb-runway">—</span></span>
+      <span class="sep">|</span>
+      <span>Skills: <span class="v" id="sb-skills">—</span></span>
+      <span class="sb-right" id="sb-sync">—</span>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /shell -->
+
 <script>
-const API = 'http://localhost:4242';
-const AGENTS = [
-  {id:'CEO',        icon:'🎯', name:'CEO',         sub:'Orchestrator'},
-  {id:'ENGINEERING',icon:'⚙️', name:'Engineering', sub:'Eng Agent'},
-  {id:'MARKETING',  icon:'📣', name:'Marketing',   sub:'Mktg Agent'},
-  {id:'OUTREACH',   icon:'🎯', name:'Outreach',    sub:'GTM Agent'},
-  {id:'DESIGN',     icon:'🎨', name:'Design',      sub:'Design Agent'},
-  {id:'QA',         icon:'🧪', name:'QA',          sub:'QA Agent'},
-  {id:'DATA',       icon:'📊', name:'Data',        sub:'Data Agent'},
-  {id:'OPS',        icon:'🔧', name:'Ops',         sub:'Ops Agent'},
-];
+// ═══════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════
 
-let entries=[], rawState='', rawMemory='', activeFilter='ALL', activeTab='priority';
+// GitHub raw URLs — update REPO_USER/REPO_NAME after pushing
+const RAW_BASE = 'https://raw.githubusercontent.com/anshmudgil/velocity-command/main';
+const LOCAL_API = 'http://localhost:4242';
 
-// ── Parse ──────────────────────────────────────────────
-function parseEntries(raw){
-  return raw.split('\n').filter(l=>{
-    if(!l.trim()||l.startsWith('#')||l.startsWith('---')||l.startsWith('##')) return false;
+// Agent colours matching velocityos design language
+const AGENT_COLORS = {
+  CEO:         { bg:'rgba(99,102,241,.15)',  fg:'#818cf8' },
+  ENGINEERING: { bg:'rgba(59,130,246,.12)',  fg:'#60a5fa' },
+  MARKETING:   { bg:'rgba(245,158,11,.12)',  fg:'#fbbf24' },
+  OUTREACH:    { bg:'rgba(239,68,68,.12)',   fg:'#f87171' },
+  DESIGN:      { bg:'rgba(139,92,246,.12)',  fg:'#c084fc' },
+  QA:          { bg:'rgba(249,115,22,.12)',  fg:'#fb923c' },
+  DATA:        { bg:'rgba(20,184,166,.12)',  fg:'#2dd4bf' },
+  OPS:         { bg:'rgba(148,163,184,.12)', fg:'#94a3b8' },
+};
+
+const STAGE_COLORS = {
+  capture:'#94a3b8', triage:'#f59e0b', design:'#8b5cf6', scoping:'#06b6d4',
+  engineering:'#3b82f6', qa:'#f97316', review:'#ec4899', deploy:'#14b8a6',
+  live:'#22c55e', blocked:'#ef4444',
+};
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let entries = [], rawState = '', rawMemory = '', activeFilter = 'ALL', activePage = 'dashboard';
+
+// ═══════════════════════════════════════════════
+// PARSE
+// ═══════════════════════════════════════════════
+function parseEntries(raw) {
+  return raw.split('\n').filter(l => {
+    if (!l.trim() || l.startsWith('#') || l.startsWith('---') || l.startsWith('##')) return false;
     return /^\d{4}-\d{2}-\d{2}/.test(l);
-  }).map(l=>{
-    const m=l.match(/^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})\s*\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|\s*(.*)/);
-    return m ? {date:m[1],time:m[2],agent:m[3].trim().toUpperCase(),status:m[4].trim().toUpperCase(),action:m[5].trim(),output:m[6].trim()} : null;
+  }).map(l => {
+    const m = l.match(/^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})\s*\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|\s*(.*)/);
+    return m ? { date:m[1], time:m[2], agent:m[3].trim().toUpperCase(), status:m[4].trim().toUpperCase(), action:m[5].trim(), output:m[6].trim() } : null;
   }).filter(Boolean).reverse();
 }
 
-function parsePriority(raw){
-  const tiers=[];let cur=null;let inP=false;let n=0;
-  for(const l of raw.split('\n')){
-    if(l.includes('## PRIORITY STACK')){inP=true;continue;}
-    if(inP&&l.startsWith('## ')&&!l.includes('PRIORITY')){inP=false;continue;}
-    if(!inP)continue;
-    const tm=l.match(/^(T[1-4])\s*[-—]/);
-    if(tm){cur={tier:tm[1],label:l.replace(/^T[1-4]\s*[-—]\s*/,'').trim(),items:[]};tiers.push(cur);n=0;continue;}
-    const im=l.match(/^\d+\.\s+(.+)/);
-    if(im&&cur){
+function parsePriority(raw) {
+  const tiers = []; let cur = null; let inP = false; let n = 0;
+  for (const l of raw.split('\n')) {
+    if (l.includes('## PRIORITY STACK')) { inP = true; continue; }
+    if (inP && l.startsWith('## ') && !l.includes('PRIORITY')) { inP = false; continue; }
+    if (!inP) continue;
+    const tm = l.match(/^(T[1-4]|PERSONAL)\s*[-—]/);
+    if (tm) { cur = { tier:tm[1], label:l.replace(/^(T[1-4]|PERSONAL)\s*[-—]\s*/,'').trim(), items:[] }; tiers.push(cur); n = 0; continue; }
+    const im = l.match(/^\d+\.\s+(.+)/);
+    if (im && cur) {
       n++;
-      const t=im[1];
-      const am=t.match(/Agent:\s*([^|]+)/i);
-      let st='todo';
-      if(t.includes('IN_PROGRESS')||t.includes('◉'))st='active';
-      else if(t.includes('DONE')||t.includes('✓'))st='done';
-      else if(t.toLowerCase().includes('blocked'))st='blocked';
-      cur.items.push({num:n,text:t.split('|')[0].replace(/Agent:.*/,'').replace(/[◉✓✗→]/g,'').trim(),agent:am?am[1].trim():null,state:st});
+      const t = im[1];
+      const am = t.match(/Agent:\s*([^|]+)/i);
+      let st = 'todo';
+      if (t.includes('IN_PROGRESS') || t.includes('◉')) st = 'active';
+      else if (t.includes('DONE') || t.includes('✓')) st = 'done';
+      else if (t.toLowerCase().includes('blocked')) st = 'blocked';
+      cur.items.push({ num:n, text:t.split('|')[0].replace(/Agent:.*/,'').replace(/[◉✓✗→]/g,'').trim(), agent:am?am[1].trim():null, state:st });
     }
   }
   return tiers;
 }
 
-function parseDecisions(raw){
-  const out=[];let inD=false;
-  for(const l of raw.split('\n')){
-    if(l.includes('## DECISIONS')){inD=true;continue;}
-    if(inD&&l.startsWith('## ')){inD=false;continue;}
-    if(!inD||!l.trim())continue;
-    const m=l.match(/^(\d{4}-\d{2}-\d{2})\s*\|\s*(.+)/);
-    if(m)out.push({date:m[1],text:m[2].trim()});
+function parseDecisions(raw) {
+  const out = []; let inD = false;
+  for (const l of raw.split('\n')) {
+    if (l.includes('## DECISIONS')) { inD = true; continue; }
+    if (inD && l.startsWith('## ')) { inD = false; continue; }
+    if (!inD || !l.trim()) continue;
+    const m = l.match(/^(\d{4}-\d{2}-\d{2})\s*\|\s*(.+)/);
+    if (m) out.push({ date:m[1], text:m[2].trim() });
   }
   return out.reverse();
 }
 
-function parseMetrics(raw){
-  const g=(rx)=>{const r=raw.match(rx);return r?r[1].trim():null;};
+function parseMetrics(raw) {
+  const g = rx => { const r = raw.match(rx); return r ? r[1].trim() : null; };
   return {
     mrr:     g(/^MRR:\s*(.+)/m),
     installs:g(/^Active installs:\s*(.+)/m),
@@ -290,181 +1148,314 @@ function parseMetrics(raw){
   };
 }
 
-// ── Render ─────────────────────────────────────────────
-const today=()=>new Date().toISOString().slice(0,10);
+// ═══════════════════════════════════════════════
+// RENDER — Dashboard
+// ═══════════════════════════════════════════════
+const today = () => new Date().toISOString().slice(0,10);
 
-function renderAgents(){
-  const status={},counts={},td=today();
-  for(const e of entries){
-    if(!counts[e.agent])counts[e.agent]=0;
-    if(e.date===td)counts[e.agent]++;
-    if(e.status==='IN_PROGRESS')status[e.agent]='active';
-    else if(e.status==='BLOCKED'&&status[e.agent]!=='active')status[e.agent]='blocked';
-    else if(!status[e.agent])status[e.agent]='idle';
-  }
-  document.getElementById('agents-col').innerHTML=AGENTS.map(a=>{
-    const s=status[a.id]||'idle', c=counts[a.id]||0;
-    return `<div class="agent-row ${s==='active'?'on':''}" onclick="setFilter('${a.id}')">
-      <div class="agent-ic">${a.icon}</div>
-      <div class="agent-info">
-        <div class="agent-name">${a.name}</div>
-        <div class="agent-sub">${c>0?c+' today':a.sub}</div>
+function renderDashboard() {
+  const td = today();
+  const done    = entries.filter(e => e.date === td && e.status === 'DONE').length;
+  const active  = entries.filter(e => e.status === 'IN_PROGRESS').length;
+  const blocked = entries.filter(e => e.status === 'BLOCKED').length;
+  const tiers   = parsePriority(rawState);
+  const t1      = (tiers.find(t => t.tier === 'T1')?.items || []).length;
+  const metrics = parseMetrics(rawState);
+
+  document.getElementById('d-done').textContent    = done;
+  document.getElementById('d-active').textContent  = active;
+  document.getElementById('d-blocked').textContent = blocked;
+  document.getElementById('d-t1').textContent      = t1;
+  document.getElementById('d-total').textContent   = entries.length;
+  document.getElementById('d-mrr').textContent     = metrics.mrr || '$0';
+  document.getElementById('m-done').textContent    = done;
+  document.getElementById('m-active').textContent  = active;
+
+  // Agent activity bars
+  const agentCounts = {};
+  const allAgents = ['CEO','ENGINEERING','MARKETING','OUTREACH','DESIGN','QA','DATA','OPS'];
+  allAgents.forEach(a => agentCounts[a] = 0);
+  entries.filter(e => e.date === td).forEach(e => { if (agentCounts[e.agent] !== undefined) agentCounts[e.agent]++; });
+  const maxCount = Math.max(...Object.values(agentCounts), 1);
+
+  const agentIcons = {CEO:'🎯',ENGINEERING:'⚙️',MARKETING:'📣',OUTREACH:'🎯',DESIGN:'🎨',QA:'🧪',DATA:'📊',OPS:'🔧'};
+
+  document.getElementById('pipeline-bars').innerHTML = allAgents.map(a => {
+    const count = agentCounts[a] || 0;
+    const pct   = (count / maxCount) * 100;
+    const col   = (AGENT_COLORS[a] || {}).fg || '#94a3b8';
+    return `<div class="pipeline-row">
+      <div class="pipeline-label">${agentIcons[a]||''} ${a}</div>
+      <div class="pipeline-bar-track">
+        <div class="pipeline-bar-fill" style="width:${pct}%;background:${col}"></div>
       </div>
-      <span class="ast ast-${s}">${s}</span>
+      <div class="pipeline-count">${count}</div>
     </div>`;
   }).join('');
+
+  // Recent list (8 entries)
+  const recent = entries.slice(0, 8);
+  if (recent.length === 0) {
+    document.getElementById('recent-list').innerHTML = `<div style="padding:24px;text-align:center;font-size:12px;color:var(--mutfg)">No activity yet. Log your first task in the Activity Log.</div>`;
+  } else {
+    document.getElementById('recent-list').innerHTML = recent.map(e => {
+      const ac = AGENT_COLORS[e.agent] || {};
+      const statusDot = {DONE:'✓',IN_PROGRESS:'◉',BLOCKED:'⊘',FAILED:'✗'}[e.status]||'·';
+      const statusCol = {DONE:'#22c55e',IN_PROGRESS:'#f59e0b',BLOCKED:'#ef4444',FAILED:'#ef4444'}[e.status]||'#94a3b8';
+      return `<div class="recent-row">
+        <div style="flex:1;min-width:0">
+          <div class="recent-title">${esc(e.action)}</div>
+          <div class="recent-date">${e.date} ${e.time}</div>
+        </div>
+        <div class="recent-badges">
+          <span class="badge" style="background:${ac.bg||'var(--sec)'};color:${ac.fg||'var(--mutfg)'}">${e.agent}</span>
+          <span style="color:${statusCol};font-size:13px">${statusDot}</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
 }
 
-function renderFilters(){
-  const agents=['ALL',...new Set(entries.map(e=>e.agent))];
-  document.getElementById('log-filters').innerHTML=agents.map(a=>
-    `<button class="fb ${activeFilter===a?'on':''}" onclick="setFilter('${a}')">${a}</button>`
+// ═══════════════════════════════════════════════
+// RENDER — Activity Log
+// ═══════════════════════════════════════════════
+function renderFilters() {
+  const agents = ['ALL', ...new Set(entries.map(e => e.agent))];
+  document.getElementById('log-filters').innerHTML = agents.map(a =>
+    `<button class="filter-chip ${activeFilter===a?'active':''}" onclick="setFilter('${a}')">${a}</button>`
   ).join('');
 }
 
-function renderLog(){
-  const feed=document.getElementById('log-feed');
-  const list=activeFilter==='ALL'?entries:entries.filter(e=>e.agent===activeFilter);
-  if(!list.length){feed.innerHTML='<div class="empty">No entries. Log your first task above.</div>';document.getElementById('log-count').textContent='0';return;}
-  document.getElementById('log-count').textContent=list.length;
-  const icons={DONE:'✓',IN_PROGRESS:'◉',BLOCKED:'⊘',FAILED:'✗'};
-  let html='',lastDate=null,td=today();
-  for(const e of list){
-    if(e.date!==lastDate){
-      html+=`<div class="log-date">${e.date===td?'Today':e.date}</div>`;
-      lastDate=e.date;
+function renderLog() {
+  const feed   = document.getElementById('log-feed');
+  const list   = activeFilter === 'ALL' ? entries : entries.filter(e => e.agent === activeFilter);
+  if (!list.length) {
+    feed.innerHTML = `<div style="padding:48px;text-align:center;font-size:13px;color:var(--mutfg)">No entries yet. Log your first task below.</div>`;
+    return;
+  }
+  const icons = {DONE:'✓',IN_PROGRESS:'◉',BLOCKED:'⊘',FAILED:'✗'};
+  const td = today();
+  let html = '', lastDate = null;
+
+  for (const e of list) {
+    if (e.date !== lastDate) {
+      html += `<div class="log-date-sep">${e.date === td ? 'Today' : e.date}</div>`;
+      lastDate = e.date;
     }
-    const out=e.output&&e.output!=='-'?`<div class="log-out">→ ${esc(e.output)}</div>`:'';
-    html+=`<div class="log-row">
+    const ac  = AGENT_COLORS[e.agent] || {};
+    const statusCol = {DONE:'#22c55e',IN_PROGRESS:'#f59e0b',BLOCKED:'#ef4444',FAILED:'#ef4444'}[e.status]||'#94a3b8';
+    const out = e.output && e.output !== '-' ? `<div class="log-output">→ ${esc(e.output)}</div>` : '';
+    html += `<div class="log-entry">
       <div class="log-time">${e.time}</div>
-      <div class="log-ic">${icons[e.status]||'·'}</div>
-      <div class="log-bd">
-        <div><span class="log-tag tag-${e.agent}">${e.agent}</span><span class="spill spill-${e.status}">${e.status.replace('_',' ')}</span></div>
-        <div class="log-text">${esc(e.action)}</div>${out}
+      <div class="log-status-icon" style="color:${statusCol}">${icons[e.status]||'·'}</div>
+      <div class="log-meta">
+        <div class="log-header-row">
+          <span class="agent-tag" style="background:${ac.bg||'var(--sec)'};color:${ac.fg||'var(--mutfg)'}">${e.agent}</span>
+          <span class="status-pill pill-${e.status}">${e.status.replace('_',' ')}</span>
+        </div>
+        <div class="log-action">${esc(e.action)}</div>
+        ${out}
       </div>
     </div>`;
   }
-  feed.innerHTML=html;
+  feed.innerHTML = html;
 }
 
-function renderPriority(){
-  const tiers=parsePriority(rawState);
-  const rb=document.getElementById('right-body');
-  if(!tiers.length){rb.innerHTML='<div class="empty">No priority stack in VELOCITY_STATE.md</div>';return;}
-  const sc={todo:'ps-todo',active:'ps-active',done:'ps-done',blocked:'ps-blocked'};
-  const sl={todo:'To Do',active:'Active',done:'Done',blocked:'Blocked'};
-  let h='';
-  for(const t of tiers){
-    h+=`<div class="tier-hdr"><span class="tier-badge tb-${t.tier}">${t.tier}</span><span style="color:var(--muted)">${esc(t.label)}</span></div>`;
-    for(const i of t.items){
-      h+=`<div class="pitem">
-        <div class="pnum">${i.num}</div>
-        <div class="pbody">
-          <div class="ptask">${esc(i.text)}</div>
-          ${i.agent?`<div class="pagent">→ ${esc(i.agent)}</div>`:''}
+// ═══════════════════════════════════════════════
+// RENDER — Priority Stack
+// ═══════════════════════════════════════════════
+function renderPriority() {
+  const tiers  = parsePriority(rawState);
+  const target = document.getElementById('priority-list');
+  if (!tiers.length) {
+    target.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><h3>No priority stack</h3><p>Add a ## PRIORITY STACK SNAPSHOT section to VELOCITY_STATE.md</p></div>`;
+    return;
+  }
+  const sc = {todo:'ps-todo',active:'ps-active',done:'ps-done',blocked:'ps-blocked'};
+  const sl = {todo:'To Do',active:'Active',done:'Done',blocked:'Blocked'};
+  let html = '';
+  for (const t of tiers) {
+    const tbClass = `tb-${t.tier}`;
+    html += `<div class="tier-section"><div class="tier-header"><span class="tier-badge ${tbClass}">${t.tier}</span>${esc(t.label)}</div>`;
+    for (const item of t.items) {
+      html += `<div class="priority-item">
+        <div class="p-num">${item.num}</div>
+        <div class="p-body">
+          <div class="p-task">${esc(item.text)}</div>
+          ${item.agent ? `<div class="p-agent-tag">→ ${esc(item.agent)}</div>` : ''}
         </div>
-        <span class="pstate ${sc[i.state]}">${sl[i.state]}</span>
+        <span class="p-state ${sc[item.state]}">${sl[item.state]}</span>
       </div>`;
     }
+    html += `</div>`;
   }
-  rb.innerHTML=h;
+  target.innerHTML = html;
 }
 
-function renderDecisions(){
-  const d=parseDecisions(rawState);
-  const rb=document.getElementById('right-body');
-  if(!d.length){rb.innerHTML='<div class="empty">No decisions logged yet.</div>';return;}
-  rb.innerHTML=d.map(x=>`<div class="dec-row"><div class="dec-date">${x.date}</div><div class="dec-text">${esc(x.text)}</div></div>`).join('');
+// ═══════════════════════════════════════════════
+// RENDER — Decisions
+// ═══════════════════════════════════════════════
+function renderDecisions() {
+  const decisions = parseDecisions(rawState);
+  const target    = document.getElementById('decisions-list');
+  if (!decisions.length) {
+    target.innerHTML = `<div class="empty-state"><div class="empty-icon">⚖️</div><h3>No decisions logged</h3><p>Decisions appear when added to the ## DECISIONS LOG section in VELOCITY_STATE.md</p></div>`;
+    return;
+  }
+  target.innerHTML = decisions.map(d => `
+    <div class="decision-item">
+      <div class="dec-date">${d.date}</div>
+      <div class="dec-text">${esc(d.text)}</div>
+    </div>`).join('');
 }
 
-function renderMemory(){
-  const rb=document.getElementById('right-body');
-  if(!rawMemory){rb.innerHTML='<div class="empty">MEMORY.md not loaded — ensure serve.py is running.</div>';return;}
-  rb.innerHTML=`<div class="mem-raw">${esc(rawMemory.slice(0,3000))}</div>`;
+// ═══════════════════════════════════════════════
+// RENDER — Memory
+// ═══════════════════════════════════════════════
+function renderMemory() {
+  const target = document.getElementById('memory-body');
+  if (!rawMemory) {
+    target.innerHTML = `<div class="empty-state"><div class="empty-icon">◎</div><h3>Memory not loaded</h3><p>MEMORY.md couldn't be fetched. Push it to GitHub or run serve.py locally.</p></div>`;
+    return;
+  }
+  target.innerHTML = `<div class="memory-raw">${esc(rawMemory)}</div>`;
 }
 
-function renderMetrics(m){
-  if(m.mrr)      document.getElementById('m-mrr').textContent=m.mrr;
-  if(m.installs) document.getElementById('m-installs').textContent=m.installs;
-  if(m.pipeline) document.getElementById('m-pipeline').textContent=m.pipeline;
-  if(m.phase)    document.getElementById('sb-phase').textContent=m.phase;
-  if(m.build)    document.getElementById('sb-build').textContent=m.build;
-  if(m.runway)   document.getElementById('sb-runway').textContent=m.runway;
-  if(m.skills)   document.getElementById('sb-skills').textContent=m.skills;
+// ═══════════════════════════════════════════════
+// RENDER — Metrics & Status
+// ═══════════════════════════════════════════════
+function renderMetrics() {
+  const m = parseMetrics(rawState);
+  if (m.mrr)     { document.getElementById('m-mrr').textContent = m.mrr; document.getElementById('d-mrr').textContent = m.mrr; }
+  if (m.installs) document.getElementById('m-installs').textContent = m.installs;
+  if (m.phase)    document.getElementById('sb-phase').textContent  = m.phase;
+  if (m.build)    document.getElementById('sb-build').textContent  = m.build;
+  if (m.runway)   document.getElementById('sb-runway').textContent = m.runway;
+  if (m.skills)   document.getElementById('sb-skills').textContent = m.skills;
 }
 
-function renderCounts(){
-  const td=today();
-  document.getElementById('m-done').textContent=entries.filter(e=>e.date===td&&e.status==='DONE').length;
-  document.getElementById('m-active').textContent=entries.filter(e=>e.status==='IN_PROGRESS').length;
+// ═══════════════════════════════════════════════
+// DATA — fetch with GitHub raw fallback to localhost
+// ═══════════════════════════════════════════════
+async function fetchFile(name) {
+  // Try GitHub first (cloud, read-only)
+  try {
+    const r = await fetch(`${RAW_BASE}/${name}?cb=${Date.now()}`);
+    if (r.ok) return await r.text();
+  } catch {}
+  // Fallback to local serve.py
+  try {
+    const r = await fetch(`${LOCAL_API}/api/file?name=${name}`);
+    if (r.ok) return (await r.json()).content;
+  } catch {}
+  return null;
 }
 
-function renderAll(){
-  renderAgents();renderFilters();renderLog();renderRight();renderCounts();
+async function appendLog(line) {
+  // Local only — can't write to GitHub from browser
+  try {
+    await fetch(`${LOCAL_API}/api/append`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({line})
+    });
+    return true;
+  } catch { return false; }
 }
 
-function renderRight(){
-  if(activeTab==='priority')renderPriority();
-  else if(activeTab==='decisions')renderDecisions();
-  else renderMemory();
-}
-
-// ── Data ───────────────────────────────────────────────
-async function fetchFile(name){
-  try{
-    const r=await fetch(`${API}/api/file?name=${name}`);
-    if(!r.ok)return null;
-    return (await r.json()).content;
-  }catch{return null;}
-}
-
-async function syncAll(){
-  const btn=document.getElementById('syncBtn');
+async function syncAll() {
+  const btn  = document.getElementById('syncBtn');
+  const icon = document.getElementById('sync-icon');
   btn.classList.add('spin');
-  rawState  = await fetchFile('VELOCITY_STATE.md') || rawState;
-  rawMemory = await fetchFile('MEMORY.md')         || rawMemory;
-  entries   = parseEntries(rawState);
-  renderAll();
-  renderMetrics(parseMetrics(rawState));
-  const now=new Date();
-  document.getElementById('sb-sync').textContent='Last sync: '+now.toLocaleTimeString();
-  document.getElementById('hdr-date').textContent=now.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'});
+  icon.style.animation = 'rot .6s linear infinite';
+
+  try {
+    const [state, memory] = await Promise.all([
+      fetchFile('VELOCITY_STATE.md'),
+      fetchFile('MEMORY.md'),
+    ]);
+    if (state)  rawState  = state;
+    if (memory) rawMemory = memory;
+    entries = parseEntries(rawState);
+    renderAll();
+    const now = new Date();
+    document.getElementById('sb-sync').textContent = `Last sync: ${now.toLocaleTimeString()}`;
+    document.getElementById('topbar-date').textContent = now.toLocaleDateString('en-AU', {weekday:'short',day:'numeric',month:'short'});
+  } catch(e) { console.error(e); }
+
   btn.classList.remove('spin');
+  icon.style.animation = '';
 }
 
-// ── Interactions ───────────────────────────────────────
-function setFilter(a){activeFilter=a;renderFilters();renderLog();}
-
-function tab(el,t){
-  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
-  el.classList.add('on');
-  activeTab=t;
-  renderRight();
+function renderAll() {
+  renderFilters();
+  renderLog();
+  renderDashboard();
+  renderPriority();
+  renderDecisions();
+  renderMemory();
+  renderMetrics();
 }
 
-async function addLog(){
+// ═══════════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════════
+const PAGE_TITLES = {
+  dashboard: ['Dashboard', 'Velocity Control'],
+  log:       ['Activity Log', 'Agent execution feed'],
+  priority:  ['Priority Stack', 'Value Equation ranked'],
+  decisions: ['Decisions', 'Logged decisions'],
+  memory:    ['Memory', 'MEMORY.md context'],
+};
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item a').forEach(a => a.classList.remove('active'));
+  document.getElementById(`page-${id}`).classList.add('active');
+  document.querySelectorAll('.nav-item a').forEach(a => {
+    if (a.getAttribute('onclick') && a.getAttribute('onclick').includes(`'${id}'`)) a.classList.add('active');
+  });
+  activePage = id;
+  const [title, sub] = PAGE_TITLES[id] || [id, ''];
+  document.getElementById('topbar-title').textContent = title;
+  document.getElementById('topbar-sub').textContent   = sub;
+}
+
+function setFilter(a) {
+  activeFilter = a;
+  renderFilters();
+  renderLog();
+}
+
+// ═══════════════════════════════════════════════
+// LOG ENTRY
+// ═══════════════════════════════════════════════
+async function addLog() {
   const agent  = document.getElementById('add-agent').value;
   const status = document.getElementById('add-status').value;
   const text   = document.getElementById('add-text').value.trim();
-  if(!text)return;
-  const now=new Date();
-  const date=now.toISOString().slice(0,10);
-  const time=now.toTimeString().slice(0,5);
-  const line=`${date} ${time} | ${agent} | ${status} | ${text} | -`;
-  document.getElementById('add-text').value='';
-  try{
-    await fetch(`${API}/api/append`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({line})});
-  }catch{}
+  if (!text) return;
+  const now  = new Date();
+  const date = now.toISOString().slice(0,10);
+  const time = now.toTimeString().slice(0,5);
+  const line = `${date} ${time} | ${agent} | ${status} | ${text} | -`;
+  document.getElementById('add-text').value = '';
+  await appendLog(line);
   await syncAll();
 }
 
-document.addEventListener('DOMContentLoaded',()=>{
-  document.getElementById('add-text').addEventListener('keydown',e=>{if(e.key==='Enter')addLog();});
+// ═══════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ═══════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('add-text').addEventListener('keydown', e => { if (e.key === 'Enter') addLog(); });
 });
 
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-
-// ── Boot ───────────────────────────────────────────────
 syncAll();
 setInterval(syncAll, 60000);
 </script>
