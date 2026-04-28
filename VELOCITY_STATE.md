@@ -75,3 +75,4 @@ Current phase: Pre-GTM
 2026-04-29 06:10 | ENGINEERING | DONE | Velocity Command deployed to Vercel production | https://velocity-command.vercel.app
 2026-04-29 07:30 | ENGINEERING | DONE | velocity-command-v2 built and deployed - Next.js 15 + Supabase + Paperclip + shadcn | https://velocity-command-v2.vercel.app
 2026-04-29 07:55 | OPS | DONE | Installed 3 ClawHub skills in Hermes + OpenClaw: self-improving-agent v3.0.18, skill-vetter v1.0.0, proactive-agent v3.1.0 | both ~/.openclaw/workspace/skills/ and Hermes skills/
+2026-04-29 08:30 | OPS | DONE | Installed 100 ClawHub skills into OpenClaw (128 total) and Hermes (84 in openclaw-imports). All tiers complete: autonomy, memory, search, browser, dev, docs, comms, media, OS. | both /.openclaw/workspace/skills/ and Hermes skills/
